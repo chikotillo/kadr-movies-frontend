@@ -2,8 +2,13 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getMyRecommendations, attachMovies } from '../services/recommendApi'
+import { GENRES, genreRu } from '../services/moviesApi'
 import MovieCard from '../components/MovieCard'
 import { SkeletonGrid, ErrorBox } from '../components/Status'
+
+// переводим названия жанров внутри пояснения
+const translate = (text) =>
+  GENRES.reduce((t, g) => t.replaceAll(g, genreRu(g)), text)
 
 export default function Recommendations() {
   const { user } = useAuth()
@@ -26,14 +31,19 @@ export default function Recommendations() {
       .catch((e) => !cancelled && setError(e.message))
       .finally(() => clearTimeout(slowTimer))
 
-    return () => { cancelled = true; clearTimeout(slowTimer) }
+    return () => {
+      cancelled = true
+      clearTimeout(slowTimer)
+    }
   }, [user?.id, attempt])
 
   if (!user) {
     return (
       <>
         <h1>Рекомендации</h1>
-        <p className="banner"><Link to="/login">Войдите</Link>, чтобы получить персональные рекомендации.</p>
+        <p className="banner">
+          <Link to="/login">Войдите</Link>, чтобы получить персональные рекомендации.
+        </p>
       </>
     )
   }
@@ -41,7 +51,7 @@ export default function Recommendations() {
   return (
     <>
       <h1>Рекомендации для вас</h1>
-      <p className="muted">Подбираются по вашим оценкам алгоритмом ALS.</p>
+      <p className="muted">Подбираются по вашим оценкам.</p>
 
       {error && (
         <>
@@ -69,7 +79,7 @@ export default function Recommendations() {
           {items.map(({ movie, reason }) => (
             <div key={movie.movie_id} className="card-wrap">
               <MovieCard movie={movie} />
-              {reason && <p className="muted">{reason}</p>}
+              {reason && <p className="reason">{translate(reason)}</p>}
             </div>
           ))}
         </div>

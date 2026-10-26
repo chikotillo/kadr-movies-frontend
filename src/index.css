@@ -316,3 +316,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+/* ---------- Пояснения к рекомендациям ---------- */
+.card-wrap { height: 100%; }
+.reason { margin: 0; padding: 10px 12px; font-size: .8rem; line-height: 1.45; color: var(--muted);
+  background: rgba(232, 192, 119, .06); border: 1px solid rgba(232, 192, 119, .18); border-radius: 12px;
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
