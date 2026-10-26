@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { APP_NAME } from '../config'
+import SearchBox from './SearchBox'
 
 export default function Navbar() {
   const { user, profile, signOut } = useAuth()
@@ -23,6 +24,8 @@ export default function Navbar() {
         </svg>
         <span>{APP_NAME}<i>.</i></span>
       </Link>
+
+      <SearchBox />
 
       <button className="burger" onClick={() => setOpen(!open)} aria-label="Меню">
         {open ? '✕' : '☰'}

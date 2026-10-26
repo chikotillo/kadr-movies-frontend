@@ -83,3 +83,15 @@ export const genreRu = (g) => GENRE_RU[g] ?? g
 export const displayTitle = (m) => m.title_ru || cleanTitle(m.title)
 export const originalTitle = (m) => cleanTitle(m.title)
 export const movieOverview = (m) => m.overview_ru || m.overview || null
+export async function getFeatured(limit = 6) {
+  // сначала фильмы с настоящими обложками, иначе просто самые высоко оценённые
+  const { data, error } = await supabase
+    .from('movies')
+    .select('*')
+    .not('poster_url', 'is', null)
+    .gte('ml_rating_count', 100)
+    .order('ml_avg_rating', { ascending: false })
+    .limit(limit)
+  if (!error && data && data.length >= 3) return data
+  return getPopular(limit)
+}

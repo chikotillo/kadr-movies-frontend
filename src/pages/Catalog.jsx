@@ -6,89 +6,93 @@ import { SkeletonGrid, ErrorBox } from '../components/Status'
 
 const PAGE_SIZE = 24
 
+// поле ввода: текст меняется сразу, в адрес попадает с небольшой задержкой
+function useUrlText(value, commit) {
+  const [text, setText] = useState(value)
+  useEffect(() => {
+    setText(value)
+  }, [value])
+  useEffect(() => {
+    if (text === value) return
+    const timer = setTimeout(() => commit(text), 350)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text])
+  return [text, setText]
+}
+
 export default function Catalog() {
   const [params, setParams] = useSearchParams()
-  const [q, setQ] = useState(params.get('q') ?? '')
-  const [genre, setGenre] = useState(params.get('genre') ?? '')
-  const [yearFrom, setYearFrom] = useState(params.get('from') ?? '')
-  const [yearTo, setYearTo] = useState(params.get('to') ?? '')
-  const [sort, setSort] = useState(params.get('sort') ?? 'popular')
-  const [page, setPage] = useState(Number(params.get('page')) || 0)
+  const q = params.get('q') ?? ''
+  const genre = params.get('genre') ?? ''
+  const yearFrom = params.get('from') ?? ''
+  const yearTo = params.get('to') ?? ''
+  const sort = params.get('sort') ?? 'popular'
+  const page = Number(params.get('page')) || 0
+
   const [movies, setMovies] = useState([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // адрес страницы отражает фильтры: «Назад» возвращает к тому же поиску
-  useEffect(() => {
-    const next = {}
-    if (q) next.q = q
-    if (genre) next.genre = genre
-    if (yearFrom) next.from = yearFrom
-    if (yearTo) next.to = yearTo
-    if (sort !== 'popular') next.sort = sort
-    if (page) next.page = String(page)
-    setParams(next, { replace: true })
-  }, [q, genre, yearFrom, yearTo, sort, page])
+  function update(changes, keepPage = false) {
+    setParams((prev) => {
+      const next = new URLSearchParams(prev)
+      Object.entries(changes).forEach(([k, v]) => (v ? next.set(k, v) : next.delete(k)))
+      if (!keepPage) next.delete('page')
+      return next
+    }, { replace: true })
+  }
+
+  const [qText, setQText] = useUrlText(q, (v) => update({ q: v }))
+  const [fromText, setFromText] = useUrlText(yearFrom, (v) => update({ from: v }))
+  const [toText, setToText] = useUrlText(yearTo, (v) => update({ to: v }))
 
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     setError(null)
-    const timer = setTimeout(() => {
-      searchMovies({ q, genre, yearFrom, yearTo, sort, page, pageSize: PAGE_SIZE })
-        .then((res) => {
-          if (cancelled) return
-          setMovies(res.movies)
-          setTotal(res.total ?? 0)
-        })
-        .catch((e) => !cancelled && setError(e.message))
-        .finally(() => !cancelled && setLoading(false))
-    }, 350)
-    return () => {
-      cancelled = true
-      clearTimeout(timer)
-    }
+    searchMovies({ q, genre, yearFrom, yearTo, sort, page, pageSize: PAGE_SIZE })
+      .then((res) => {
+        if (cancelled) return
+        setMovies(res.movies)
+        setTotal(res.total ?? 0)
+      })
+      .catch((e) => !cancelled && setError(e.message))
+      .finally(() => !cancelled && setLoading(false))
+    return () => { cancelled = true }
   }, [q, genre, yearFrom, yearTo, sort, page])
 
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
-  const change = (setter) => (e) => {
-    setter(e.target.value)
-    setPage(0)
-  }
-  const pickGenre = (g) => {
-    setGenre(g)
-    setPage(0)
-  }
   const goPage = (p) => {
-    setPage(p)
+    update({ page: p ? String(p) : '' }, true)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
-  const reset = () => {
-    setQ(''); setGenre(''); setYearFrom(''); setYearTo(''); setSort('popular'); setPage(0)
-  }
+  const reset = () => setParams({}, { replace: true })
 
   return (
     <>
       <h1>Каталог</h1>
       <input className="search-input" placeholder="🔍 Поиск по названию фильма"
-             value={q} onChange={change(setQ)} />
+             value={qText} onChange={(e) => setQText(e.target.value)} />
 
       <div className="chip-scroll">
-        <button className={!genre ? 'chip active' : 'chip'} onClick={() => pickGenre('')}>Все</button>
+        <button className={!genre ? 'chip active' : 'chip'} onClick={() => update({ genre: '' })}>Все</button>
         {GENRES.map((g) => (
           <button key={g} className={genre === g ? 'chip active' : 'chip'}
-                  onClick={() => pickGenre(genre === g ? '' : g)}>
+                  onClick={() => update({ genre: genre === g ? '' : g })}>
             {genreRu(g)}
           </button>
         ))}
       </div>
 
       <div className="filters-row">
-        <input type="number" placeholder="Год от" value={yearFrom} onChange={change(setYearFrom)} />
-        <input type="number" placeholder="Год до" value={yearTo} onChange={change(setYearTo)} />
-        <select value={sort} onChange={change(setSort)}>
+        <input type="number" placeholder="Год от" value={fromText}
+               onChange={(e) => setFromText(e.target.value)} />
+        <input type="number" placeholder="Год до" value={toText}
+               onChange={(e) => setToText(e.target.value)} />
+        <select value={sort} onChange={(e) => update({ sort: e.target.value })}>
           <option value="popular">Сначала популярные</option>
           <option value="rating">По рейтингу</option>
           <option value="newest">Сначала новые</option>

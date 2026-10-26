@@ -10,7 +10,7 @@ export default function Footer() {
         <Link to="/recommendations">Рекомендации</Link>
       </div>
       <p>{APP_NAME} — учебный проект по дисциплине «Большие данные». Данные: MovieLens. Рекомендации: ALS (Spark MLlib).</p>
-      <p>Русские названия и описания: Викиданные и Википедия (CC BY-SA).</p>
+            <p>Названия, описания и обложки: Википедия и Викиданные (описания CC BY-SA); часть обложек: OMDb, TMDB.</p>
     </footer>
   )
 }

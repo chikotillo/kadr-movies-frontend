@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { getPopular, searchMovies, GENRES, genreRu } from '../services/moviesApi'
 import { useAuth } from '../context/AuthContext'
+import FeaturedHero from '../components/FeaturedHero'
 import MovieRail from '../components/MovieRail'
 import { ErrorBox } from '../components/Status'
 
@@ -19,8 +20,6 @@ const RAILS = [
 
 export default function Home() {
   const { user } = useAuth()
-  const navigate = useNavigate()
-  const [q, setQ] = useState('')
   const [data, setData] = useState({})
   const [error, setError] = useState(null)
 
@@ -32,38 +31,30 @@ export default function Home() {
     })
   }, [])
 
-  function search(e) {
-    e.preventDefault()
-    const text = q.trim()
-    navigate(text ? `/catalog?q=${encodeURIComponent(text)}` : '/catalog')
-  }
-
   return (
     <>
-      <section className="hero">
-        <h1>Фильмы, которые вам понравятся</h1>
-        <p>Оценивайте фильмы, собирайте списки и получайте рекомендации на основе алгоритма ALS и данных MovieLens.</p>
+      <FeaturedHero />
 
-        <form className="hero-search" onSubmit={search}>
-          <input placeholder="🔍 Найти фильм по названию" value={q} onChange={(e) => setQ(e.target.value)} />
-          <button>Найти</button>
-        </form>
-
-        <div className="chip-row">
-          {GENRES.slice(0, 10).map((g) => (
-            <Link key={g} to={`/catalog?genre=${encodeURIComponent(g)}`} className="chip">
-              {genreRu(g)}
-            </Link>
-          ))}
-        </div>
-
-        <div className="hero-actions">
-          <Link to={user ? '/taste' : '/login'} className="btn">
-            {user ? 'Настроить вкус' : 'Создать аккаунт'}
+      <div className="chip-row home-genres">
+        {GENRES.slice(0, 12).map((g) => (
+          <Link key={g} to={`/catalog?genre=${encodeURIComponent(g)}`} className="chip">
+            {genreRu(g)}
           </Link>
-          <Link to="/recommendations" className="btn outline">Рекомендации</Link>
+        ))}
+      </div>
+
+      <section className="cta">
+        <div>
+          <h3>{user ? 'Настройте свой вкус' : 'Получайте рекомендации'}</h3>
+          <p className="muted">
+            {user
+              ? 'Оцените 5 фильмов, которые вы видели, и откройте персональные рекомендации.'
+              : 'Создайте аккаунт, оценивайте фильмы и собирайте свои списки.'}
+          </p>
         </div>
-        <div className="hero-stats">9 742 фильма · 100 836 оценок MovieLens · рекомендации на основе ALS (Spark MLlib)</div>
+        <Link to={user ? '/taste' : '/login'} className="btn">
+          {user ? 'Настроить вкус' : 'Создать аккаунт'}
+        </Link>
       </section>
 
       {error && <ErrorBox message={error} />}
