@@ -13,11 +13,39 @@ const SOURCE_TEXT = {
   popular_fallback: 'Пока мало оценок, поэтому показаны популярные фильмы. Оцените больше, и подбор станет точнее.',
 }
 
-// переводим жанры и разбиваем пояснение на короткие строки
-const reasonLines = (text) =>
-  GENRES.reduce((t, g) => t.replaceAll(g, genreRu(g)), text)
-    .split(/(?<=\.)\s+/)
-    .filter(Boolean)
+const ruGenre = (g) => (GENRES.includes(g) ? genreRu(g) : g)
+
+// превращаем «Есть общие жанры: … Похоже на фильм «X», который вы оценили на 5.0.»
+// в метки жанров и короткую фразу
+function Reason({ text }) {
+  const m = text.match(
+    /общие жанры:\s*(.+?)\.\s*Похоже на фильм\s*«(.+?)»,?\s*который вы оценили на\s*([\d.]+)/i
+  )
+
+  if (!m) {
+    const plain = GENRES.reduce((t, g) => t.replaceAll(g, genreRu(g)), text)
+    return (
+      <div className="reason">
+        <span className="reason-title">Почему рекомендуем</span>
+        <p>{plain}</p>
+      </div>
+    )
+  }
+
+  const genres = m[1].split(',').map((g) => ruGenre(g.trim())).filter(Boolean)
+  return (
+    <div className="reason">
+      <span className="reason-title">Почему рекомендуем</span>
+      <span className="reason-label">Совпали жанры</span>
+      <div className="reason-chips">
+        {genres.map((g) => <span key={g} className="mini-chip">{g}</span>)}
+      </div>
+      <p className="reason-like">
+        Напоминает «{m[2]}»: вы поставили <b>{m[3]} ★</b>
+      </p>
+    </div>
+  )
+}
 
 export default function Recommendations() {
   const { user } = useAuth()
@@ -94,12 +122,7 @@ export default function Recommendations() {
           {items.map(({ movie, reason }) => (
             <div key={movie.movie_id} className="rec">
               <MovieCard movie={movie} />
-              {reason && (
-                <div className="reason">
-                  <span className="reason-title">Почему это вам</span>
-                  {reasonLines(reason).map((line, i) => <p key={i}>{line}</p>)}
-                </div>
-              )}
+              {reason && <Reason text={reason} />}
             </div>
           ))}
         </div>

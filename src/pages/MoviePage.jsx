@@ -13,6 +13,7 @@ import MovieRail from '../components/MovieRail'
 import Trailer from '../components/Trailer'
 import Reviews from '../components/Reviews'
 import { Loader, ErrorBox } from '../components/Status'
+import { pushRecent } from '../services/recent'
 
 const EMPTY = { rating: null, favorite: false, watchlist: false }
 
@@ -79,6 +80,10 @@ export default function MoviePage() {
 
   useEffect(() => {
     if (movie) document.title = `${displayTitle(movie)} — ${APP_NAME}`
+  }, [movie])
+
+    useEffect(() => {
+    if (movie) pushRecent(movie.movie_id)
   }, [movie])
 
   // другие фильмы того же жанра (это не «похожие по алгоритму», так и подписано)

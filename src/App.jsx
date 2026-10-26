@@ -11,6 +11,7 @@ import Profile from './pages/Profile'
 import Onboarding from './pages/Onboarding'
 import Community from './pages/Community'
 import { APP_NAME } from './config'
+import ScrollTop from './components/ScrollTop'
 
 const TITLES = {
   '/catalog': 'Каталог', '/community': 'Сообщество', '/taste': 'Настрой вкус',
@@ -58,6 +59,7 @@ export default function App() {
         </Routes>
       </main>
       <Footer />
+       <ScrollTop />
     </>
   )
 }

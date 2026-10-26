@@ -95,3 +95,16 @@ export async function getFeatured(limit = 6) {
   if (!error && data && data.length >= 3) return data
   return getPopular(limit)
 }
+// случайный хороший фильм для кнопки «Удиви меня»
+export async function getRandomMovieId() {
+  const base = () =>
+    supabase.from('movies').select('movie_id', { count: 'exact' })
+      .gte('ml_rating_count', 200).gte('ml_avg_rating', 3.5)
+
+  const { count, error } = await base().range(0, 0)
+  if (error || !count) return null
+  const offset = Math.floor(Math.random() * count)
+  const { data, error: e2 } = await base().order('movie_id').range(offset, offset)
+  if (e2) return null
+  return data?.[0]?.movie_id ?? null
+}
