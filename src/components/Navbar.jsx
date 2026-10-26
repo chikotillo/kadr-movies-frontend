@@ -37,6 +37,7 @@ export default function Navbar() {
         <NavLink to="/community">Сообщество</NavLink>
         <NavLink to="/taste">Настрой вкус</NavLink>
         <NavLink to="/recommendations">Рекомендации</NavLink>
+        <NavLink to="/roulette">Рулетка</NavLink>
         {user ? (
           <>
             <NavLink to="/profile" className="user-link">

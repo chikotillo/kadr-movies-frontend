@@ -14,13 +14,6 @@ const PALETTE = {
   Western: ['#78350f', '#d97706'],
 }
 
-const ICONS = {
-  Action: '💥', Adventure: '🧭', Animation: '🎨', Children: '🧸', Comedy: '😄',
-  Crime: '🕵️', Documentary: '🎥', Drama: '🎭', Fantasy: '🐉', 'Film-Noir': '🌑',
-  Horror: '👻', IMAX: '🎞️', Musical: '🎵', Mystery: '🔍', Romance: '💞',
-  'Sci-Fi': '🚀', Thriller: '⚡', War: '🎖️', Western: '🤠',
-}
-
 export const genreColors = (genre) => PALETTE[genre] ?? ['#1f2430', '#3b4256']
 
 export default function Poster({ movie, className = '' }) {
@@ -40,15 +33,21 @@ export default function Poster({ movie, className = '' }) {
   const angle = 140 + ((id * 37) % 80)
   const x = 15 + ((id * 13) % 70)
   const y = 8 + ((id * 7) % 40)
+  const title = displayTitle(movie)
+  const letter = (title.match(/[\p{L}\p{N}]/u)?.[0] ?? '•').toUpperCase()
   const background =
-    `radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,.22), transparent 45%), ` +
-    `linear-gradient(to top, rgba(0,0,0,.6), transparent 62%), ` +
+    `radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,.2), transparent 50%), ` +
+    `linear-gradient(to top, rgba(8,9,14,.88), transparent 68%), ` +
     `linear-gradient(${angle}deg, ${c1}, ${c2})`
 
   return (
     <div className={`${className} poster-gen`} style={{ background }}>
-      <span className="poster-gen-icon">{ICONS[genre] ?? '🎬'}</span>
-      <span className="poster-gen-title">{displayTitle(movie)}</span>
+      <span className="poster-gen-letter" aria-hidden="true">{letter}</span>
+      <svg className="poster-gen-brand" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.6" />
+        <path d="M10 8v8l6-4z" fill="currentColor" />
+      </svg>
+      <span className="poster-gen-title">{title}</span>
       <span className="poster-gen-meta">
         {movie.release_year ?? ''}{genre ? ` · ${genreRu(genre)}` : ''}
       </span>

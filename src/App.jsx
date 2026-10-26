@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Routes, Route, Link, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import ScrollTop from './components/ScrollTop'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Recommendations from './pages/Recommendations'
@@ -10,12 +11,12 @@ import MoviePage from './pages/MoviePage'
 import Profile from './pages/Profile'
 import Onboarding from './pages/Onboarding'
 import Community from './pages/Community'
+import Roulette from './pages/Roulette'
 import { APP_NAME } from './config'
-import ScrollTop from './components/ScrollTop'
 
 const TITLES = {
   '/catalog': 'Каталог', '/community': 'Сообщество', '/taste': 'Настрой вкус',
-  '/recommendations': 'Рекомендации', '/profile': 'Кабинет', '/login': 'Вход',
+  '/recommendations': 'Рекомендации', '/roulette': 'Рулетка', '/profile': 'Кабинет', '/login': 'Вход',
 }
 
 // при переходе на другую страницу: прокрутка наверх и название вкладки
@@ -53,13 +54,14 @@ export default function App() {
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/movie/:id" element={<MoviePage />} />
           <Route path="/community" element={<Community />} />
+          <Route path="/roulette" element={<Roulette />} />
           <Route path="/taste" element={<Onboarding />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       <Footer />
-       <ScrollTop />
+      <ScrollTop />
     </>
   )
 }
