@@ -72,7 +72,10 @@ export default function SearchBox() {
   return (
     <div className="search" ref={box}>
       <form onSubmit={submit}>
-        <span className="search-icon">🔍</span>
+       <svg className="search-icon" viewBox="0 0 20 20" width="16" height="16" fill="none"
+     stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+  <circle cx="9" cy="9" r="6" /><path d="M14 14l4 4" />
+</svg>
         <input ref={input} value={q} placeholder="Поиск фильмов…"
                onChange={(e) => { setQ(e.target.value); setOpen(true) }}
                onFocus={() => setOpen(true)} />

@@ -74,7 +74,7 @@ export default function Catalog() {
   return (
     <>
       <h1>Каталог</h1>
-      <input className="search-input" placeholder="🔍 Поиск по названию фильма"
+      <input className="search-input" placeholder="Поиск по названию фильма"
              value={qText} onChange={(e) => setQText(e.target.value)} />
 
       <div className="chip-scroll">
