@@ -6,13 +6,23 @@ import { GENRES, genreRu } from '../services/moviesApi'
 import MovieCard from '../components/MovieCard'
 import { SkeletonGrid, ErrorBox } from '../components/Status'
 
-// переводим названия жанров внутри пояснения
-const translate = (text) =>
+// подпись честно отражает, чем именно подобраны фильмы
+const SOURCE_TEXT = {
+  als: 'Персональные рекомендации на основе модели ALS.',
+  genre_fallback: 'Подбор по жанрам и оценкам, которые вы поставили.',
+  popular_fallback: 'Пока мало оценок, поэтому показаны популярные фильмы. Оцените больше, и подбор станет точнее.',
+}
+
+// переводим жанры и разбиваем пояснение на короткие строки
+const reasonLines = (text) =>
   GENRES.reduce((t, g) => t.replaceAll(g, genreRu(g)), text)
+    .split(/(?<=\.)\s+/)
+    .filter(Boolean)
 
 export default function Recommendations() {
   const { user } = useAuth()
   const [items, setItems] = useState(null)
+  const [source, setSource] = useState(null)
   const [error, setError] = useState(null)
   const [slow, setSlow] = useState(false)
   const [attempt, setAttempt] = useState(0)
@@ -26,8 +36,13 @@ export default function Recommendations() {
     const slowTimer = setTimeout(() => setSlow(true), 4000)
 
     getMyRecommendations(20)
-      .then(attachMovies)
-      .then((r) => !cancelled && setItems(r))
+      .then(async ({ items: raw, source: src }) => {
+        const movies = await attachMovies(raw)
+        if (!cancelled) {
+          setItems(movies)
+          setSource(src)
+        }
+      })
       .catch((e) => !cancelled && setError(e.message))
       .finally(() => clearTimeout(slowTimer))
 
@@ -51,7 +66,7 @@ export default function Recommendations() {
   return (
     <>
       <h1>Рекомендации для вас</h1>
-      <p className="muted">Подбираются по вашим оценкам.</p>
+      <p className="muted">{SOURCE_TEXT[source] ?? 'Подбираются по вашим оценкам.'}</p>
 
       {error && (
         <>
@@ -75,11 +90,16 @@ export default function Recommendations() {
       )}
 
       {items && items.length > 0 && (
-        <div className="grid">
+        <div className="grid rec-grid">
           {items.map(({ movie, reason }) => (
-            <div key={movie.movie_id} className="card-wrap">
+            <div key={movie.movie_id} className="rec">
               <MovieCard movie={movie} />
-              {reason && <p className="reason">{translate(reason)}</p>}
+              {reason && (
+                <div className="reason">
+                  <span className="reason-title">Почему это вам</span>
+                  {reasonLines(reason).map((line, i) => <p key={i}>{line}</p>)}
+                </div>
+              )}
             </div>
           ))}
         </div>

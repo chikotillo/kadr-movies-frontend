@@ -2,6 +2,7 @@ import { supabase } from './supabaseClient'
 
 const API_URL = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
 
+// возвращает { items, source }: source = 'als' | 'genre_fallback' | 'popular_fallback' | null
 export async function getMyRecommendations(limit = 20) {
   if (!API_URL) throw new Error('Не задан VITE_API_URL')
 
@@ -31,8 +32,10 @@ export async function getMyRecommendations(limit = 20) {
   if (!res.ok) throw new Error(`Сервер рекомендаций вернул ошибку ${res.status}`)
 
   const json = await res.json()
-  const list = Array.isArray(json) ? json : json.recommendations ?? json.items ?? json.results ?? []
-  return list
+  const items = Array.isArray(json)
+    ? json
+    : json.recommendations ?? json.items ?? json.results ?? []
+  return { items, source: Array.isArray(json) ? null : json.source ?? null }
 }
 
 // если API вернул только id, догружаем фильмы из Supabase
@@ -46,7 +49,9 @@ export async function attachMovies(items) {
     .map((x) => {
       const id = Number(x.movie_id ?? x.movieId ?? x.id)
       const movie = byId.get(id)
-      return movie ? { movie, reason: x.reason ?? x.explanation ?? null, score: x.score ?? x.predicted_rating ?? null } : null
+      return movie
+        ? { movie, reason: x.reason ?? x.explanation ?? null, score: x.score ?? x.predicted_rating ?? null }
+        : null
     })
     .filter(Boolean)
 }
