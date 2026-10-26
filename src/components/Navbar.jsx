@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { APP_NAME } from '../config'
 import SearchBox from './SearchBox'
 import FriendsBadge from './FriendsBadge'
+import Avatar from './Avatar'
 
 export default function Navbar() {
   const { user, profile, signOut } = useAuth()
@@ -43,7 +44,7 @@ export default function Navbar() {
           <>
             <NavLink to="/friends">Друзья<FriendsBadge /></NavLink>
             <NavLink to="/profile" className="user-link">
-              <span className="avatar">{name.charAt(0).toUpperCase()}</span>Кабинет
+              <Avatar userId={user.id} name={name} version={profile?.avatar_version} size={26} />Кабинет
             </NavLink>
             <button className="ghost" onClick={signOut}>Выйти</button>
           </>

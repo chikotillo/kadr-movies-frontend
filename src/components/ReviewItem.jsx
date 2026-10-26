@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Poster from './Poster'
 import { displayTitle } from '../services/moviesApi'
+import Avatar from './Avatar'
 
 export function timeAgo(iso) {
   const s = Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 1000))
@@ -28,7 +29,7 @@ export default function ReviewItem({ review, like, canLike, isMine, onLike, onDe
       )}
       <div className="review-main">
         <div className="review-head">
-          <span className="review-avatar">{review.author_name.charAt(0).toUpperCase()}</span>
+          <Avatar userId={review.user_id} name={review.author_name} size={30} />
           <b>{review.author_name}</b>
           <span className="muted">{timeAgo(review.created_at)}</span>
           {review.spoiler && <span className="tag">спойлер</span>}

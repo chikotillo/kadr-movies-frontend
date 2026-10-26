@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
   getFavorites, getWatchlist, getMyRatings, setListItem, deleteRating,
@@ -7,6 +7,7 @@ import {
 import MovieCard from '../components/MovieCard'
 import TasteProfile from '../components/TasteProfile'
 import { Loader, ErrorBox } from '../components/Status'
+import Avatar from '../components/Avatar'
 
 const TABS = [
   { key: 'taste', label: 'Профиль вкуса' },
@@ -52,7 +53,15 @@ export default function Profile() {
   return (
     <>
       <h1>Личный кабинет</h1>
-      <p className="muted">{profile?.username || user.email}</p>
+            <div className="profile-head">
+        <Avatar userId={user.id} name={profile?.username || user.email}
+                version={profile?.avatar_version} size={64} />
+        <div>
+          <b>{profile?.username || user.email}</b>
+          <p className="muted">{user.email}</p>
+        </div>
+        <Link to="/settings" className="btn outline">Редактировать профиль</Link>
+      </div>
 
       <div className="tabs">
         {TABS.map((t) => (

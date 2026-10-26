@@ -15,6 +15,7 @@ import Roulette from './pages/Roulette'
 import { APP_NAME } from './config'
 import Friends from './pages/Friends'
 import RouletteRoom from './pages/RouletteRoom'
+import Settings from './pages/Settings'
 
 const TITLES = {
   '/catalog': 'Каталог', '/community': 'Сообщество', '/taste': 'Настрой вкус',
@@ -61,7 +62,8 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />
           <Route path="/friends" element={<Friends />} />
-<Route path="/roulette/room/:code" element={<RouletteRoom />} />
+          <Route path="/roulette/room/:code" element={<RouletteRoom />} />
+          <Route path="/settings" element={<Settings />} />
         </Routes>
       </main>
       <Footer />

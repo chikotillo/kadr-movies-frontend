@@ -11,6 +11,8 @@ import {
 } from '../services/roomsApi'
 import Poster from '../components/Poster'
 import { Loader } from '../components/Status'
+import Avatar from '../components/Avatar'
+import RoomChat from '../components/RoomChat'
 
 const ITEM = 128
 const GAP = 12
@@ -340,7 +342,7 @@ export default function RouletteRoom() {
       <div className="members">
         {members.map((m) => (
           <span key={m.user_id} className="member">
-            <span className="person-avatar">{(m.username || '?').charAt(0).toUpperCase()}</span>
+            <Avatar userId={m.user_id} name={m.username} size={26} />
             {m.username}{m.user_id === room.owner ? ' · хозяин' : ''}
           </span>
         ))}
@@ -462,7 +464,8 @@ export default function RouletteRoom() {
           </div>
         )}
       </section>
-
+      
+      <RoomChat roomId={room.id} />
       <div className="room-foot">
         <button className="ghost" onClick={leave}>Выйти из комнаты</button>
         {isOwner && <button className="ghost" onClick={closeRoom}>Закрыть комнату для всех</button>}

@@ -9,11 +9,14 @@ import {
 } from '../services/friendsApi'
 import { createRoom, inviteToRoom } from '../services/roomsApi'
 import { Loader } from '../components/Status'
+import Avatar from '../components/Avatar'
 
-function Person({ name, tag, children }) {
+function Person({ id, name, tag, children }) {
   return (
     <div className="person">
-      <span className="person-avatar">{(name || '?').charAt(0).toUpperCase()}</span>
+      {id
+  ? <Avatar userId={id} name={name} size={38} />
+  : <span className="person-avatar">{(name || '?').charAt(0).toUpperCase()}</span>}
       <span className="person-name">
         <b>{name || 'Без имени'}</b>
         {tag && <small className="muted">#{tag}</small>}
@@ -162,7 +165,7 @@ export default function Friends() {
           <h2>Заявки в друзья</h2>
           <div className="person-list">
             {incoming.map((f) => (
-              <Person key={f.friendship_id} name={f.username} tag={f.model_user_id}>
+              <Person key={f.friendship_id} id={f.other_id} name={f.username} tag={f.model_user_id}>
                 <button disabled={busy}
                         onClick={() => run(() => respondToRequest(f.friendship_id, true), 'Теперь вы друзья')}>
                   Принять
@@ -184,7 +187,7 @@ export default function Friends() {
         {results.map((u) => {
           const rel = relation[u.id]
           return (
-            <Person key={u.id} name={u.username} tag={u.model_user_id}>
+            <Person key={u.id} id={u.id} name={u.username} tag={u.model_user_id}>
               {!rel && <button disabled={busy} onClick={() => send(u)}>Добавить в друзья</button>}
               {rel?.status === 'accepted' && <span className="muted">Уже друзья</span>}
               {rel?.status === 'pending' && !rel.incoming && <span className="muted">Заявка отправлена</span>}
@@ -206,7 +209,7 @@ export default function Friends() {
       )}
       <div className="person-list">
         {accepted.map((f) => (
-          <Person key={f.friendship_id} name={f.username} tag={f.model_user_id}>
+          <Person key={f.friendship_id} id={f.other_id} name={f.username} tag={f.model_user_id}>
             <button disabled={busy} onClick={() => startRoom(f)}>Крутить вместе</button>
             <button className="ghost" disabled={busy}
                     onClick={() => window.confirm('Убрать из друзей?') && run(() => removeFriendship(f.friendship_id), 'Убрано из друзей')}>
@@ -222,7 +225,7 @@ export default function Friends() {
           <h2>Отправленные заявки</h2>
           <div className="person-list">
             {outgoing.map((f) => (
-              <Person key={f.friendship_id} name={f.username} tag={f.model_user_id}>
+              <Person key={f.friendship_id} id={f.other_id} name={f.username} tag={f.model_user_id}>
                 <button className="ghost" disabled={busy}
                         onClick={() => run(() => removeFriendship(f.friendship_id), 'Заявка отменена')}>
                   Отменить
