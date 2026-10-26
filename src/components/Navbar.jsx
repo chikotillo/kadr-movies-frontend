@@ -15,14 +15,14 @@ export default function Navbar() {
         <svg className="logo-mark" viewBox="0 0 32 32" aria-hidden="true">
           <defs>
             <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#8b5cf6" />
-              <stop offset="1" stopColor="#ec4899" />
+              <stop offset="0" stopColor="#f3d896" />
+              <stop offset="1" stopColor="#d8a243" />
             </linearGradient>
           </defs>
-          <rect width="32" height="32" rx="9" fill="url(#logoGrad)" />
-          <path d="M12 9.5v13l11-6.5z" fill="#fff" />
+          <circle cx="16" cy="16" r="13" fill="none" stroke="url(#logoGrad)" strokeWidth="2" />
+          <path d="M13 10.5v11l9-5.5z" fill="url(#logoGrad)" />
         </svg>
-        <span>{APP_NAME}<i>.</i></span>
+        <span className="logo-text">{APP_NAME}</span>
       </Link>
 
       <SearchBox />
@@ -33,6 +33,7 @@ export default function Navbar() {
 
       <nav className={open ? 'nav-links open' : 'nav-links'} onClick={() => setOpen(false)}>
         <NavLink to="/catalog">Каталог</NavLink>
+        <NavLink to="/community">Сообщество</NavLink>
         <NavLink to="/taste">Настрой вкус</NavLink>
         <NavLink to="/recommendations">Рекомендации</NavLink>
         {user ? (

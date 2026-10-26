@@ -1,1 +1,1 @@
-export const APP_NAME = 'Кадр'
+export const APP_NAME = 'Lumen'
