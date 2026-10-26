@@ -3,6 +3,7 @@ import { Link, NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { APP_NAME } from '../config'
 import SearchBox from './SearchBox'
+import FriendsBadge from './FriendsBadge'
 
 export default function Navbar() {
   const { user, profile, signOut } = useAuth()
@@ -40,6 +41,7 @@ export default function Navbar() {
         <NavLink to="/roulette">Рулетка</NavLink>
         {user ? (
           <>
+            <NavLink to="/friends">Друзья<FriendsBadge /></NavLink>
             <NavLink to="/profile" className="user-link">
               <span className="avatar">{name.charAt(0).toUpperCase()}</span>Кабинет
             </NavLink>

@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext'
 import { supabase } from '../services/supabaseClient'
 import { searchMovies, displayTitle, genreRu, movieOverview } from '../services/moviesApi'
 import Poster from '../components/Poster'
+import CreateRoomButton from '../components/CreateRoomButton'
 
 const MAX = 10
 const ITEM = 128
@@ -263,6 +264,7 @@ export default function Roulette() {
         )}
 
         <div className="pool-quick">
+          <CreateRoomButton pool={pool} disabled={spinning} />
           <button className="ghost" disabled={spinning} onClick={fillRandom}>Случайные хиты</button>
           {user && <button className="ghost" disabled={spinning} onClick={fromWatchlist}>Из «Посмотреть позже»</button>}
           {pool.length > 0 && (

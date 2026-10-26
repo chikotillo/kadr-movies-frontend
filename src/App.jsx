@@ -13,6 +13,8 @@ import Onboarding from './pages/Onboarding'
 import Community from './pages/Community'
 import Roulette from './pages/Roulette'
 import { APP_NAME } from './config'
+import Friends from './pages/Friends'
+import RouletteRoom from './pages/RouletteRoom'
 
 const TITLES = {
   '/catalog': 'Каталог', '/community': 'Сообщество', '/taste': 'Настрой вкус',
@@ -58,6 +60,8 @@ export default function App() {
           <Route path="/taste" element={<Onboarding />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />
+          <Route path="/friends" element={<Friends />} />
+<Route path="/roulette/room/:code" element={<RouletteRoom />} />
         </Routes>
       </main>
       <Footer />
