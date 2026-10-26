@@ -500,3 +500,109 @@ alter publication supabase_realtime add table public.roulette_room_items;
 alter publication supabase_realtime add table public.roulette_room_members;
 
 notify pgrst, 'reload schema';
+
+-- ========== ПРОФИЛЬ: аватар и имя ==========
+alter table public.profiles add column if not exists avatar_version bigint not null default 0;
+grant update (username, avatar_version) on public.profiles to authenticated;
+
+-- имя проверяется только тогда, когда его меняют
+create or replace function public.check_username() returns trigger
+language plpgsql set search_path = public as $$
+begin
+  if new.username is distinct from old.username then
+    new.username := btrim(new.username);
+    if new.username is null or char_length(new.username) not between 2 and 24 then
+      raise exception 'Имя должно быть от 2 до 24 символов';
+    end if;
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists profiles_check_username on public.profiles;
+create trigger profiles_check_username before update of username on public.profiles
+  for each row execute function public.check_username();
+
+-- ========== ЧАТ КОМНАТЫ ==========
+create table if not exists public.room_messages (
+  id          bigint generated always as identity primary key,
+  room_id     bigint not null references public.roulette_rooms(id) on delete cascade,
+  user_id     uuid not null references public.profiles(id) on delete cascade,
+  author_name text not null default 'Участник',
+  body        text not null check (char_length(btrim(body)) between 1 and 500),
+  created_at  timestamptz not null default now()
+);
+create index if not exists room_messages_room_idx on public.room_messages (room_id, id desc);
+
+-- имя автора ставит сервер + защита от спама (не больше 8 сообщений за 10 секунд)
+create or replace function public.room_message_before_insert() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if (select count(*) from public.room_messages
+      where user_id = new.user_id and created_at > now() - interval '10 seconds') >= 8 then
+    raise exception 'Слишком часто: подождите несколько секунд';
+  end if;
+  new.author_name := coalesce(
+    nullif((select username from public.profiles where id = new.user_id), ''), 'Участник');
+  return new;
+end $$;
+
+drop trigger if exists room_message_before_insert on public.room_messages;
+create trigger room_message_before_insert before insert on public.room_messages
+  for each row execute function public.room_message_before_insert();
+
+alter table public.room_messages enable row level security;
+revoke all on public.room_messages from anon;
+revoke update, delete on public.room_messages from authenticated;
+
+drop policy if exists "chat for members" on public.room_messages;
+drop policy if exists "chat members write" on public.room_messages;
+create policy "chat for members" on public.room_messages
+  for select using (public.is_room_member(room_id));
+create policy "chat members write" on public.room_messages
+  for insert with check (public.is_room_member(room_id) and user_id = auth.uid());
+
+alter publication supabase_realtime add table public.room_messages;
+
+-- ========== СМЕНА ИМЕНИ ОБНОВЛЯЕТ СТАРЫЕ СООБЩЕНИЯ ==========
+create or replace function public.sync_username() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.username is distinct from old.username then
+    update public.reviews set author_name = coalesce(nullif(new.username, ''), 'Зритель')
+      where user_id = new.id;
+    update public.roulette_room_members set username = coalesce(nullif(new.username, ''), 'Участник')
+      where user_id = new.id;
+    update public.roulette_room_items set added_by_name = coalesce(nullif(new.username, ''), 'Участник')
+      where added_by = new.id;
+    update public.room_messages set author_name = coalesce(nullif(new.username, ''), 'Участник')
+      where user_id = new.id;
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists profiles_sync_username on public.profiles;
+create trigger profiles_sync_username after update of username on public.profiles
+  for each row execute function public.sync_username();
+
+-- ========== ХРАНИЛИЩЕ АВАТАРОК ==========
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('avatars', 'avatars', true, 524288, array['image/jpeg'])
+on conflict (id) do update
+  set public = true, file_size_limit = 524288, allowed_mime_types = array['image/jpeg'];
+
+drop policy if exists "avatar select own" on storage.objects;
+drop policy if exists "avatar insert own" on storage.objects;
+drop policy if exists "avatar update own" on storage.objects;
+drop policy if exists "avatar delete own" on storage.objects;
+
+create policy "avatar select own" on storage.objects for select to authenticated
+  using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy "avatar insert own" on storage.objects for insert to authenticated
+  with check (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy "avatar update own" on storage.objects for update to authenticated
+  using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text)
+  with check (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy "avatar delete own" on storage.objects for delete to authenticated
+  using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+notify pgrst, 'reload schema';
