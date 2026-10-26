@@ -9,12 +9,22 @@ import Catalog from './pages/Catalog'
 import MoviePage from './pages/MoviePage'
 import Profile from './pages/Profile'
 import Onboarding from './pages/Onboarding'
+import Community from './pages/Community'
+import { APP_NAME } from './config'
 
-// при переходе на другую страницу возвращаемся к началу
-function ScrollToTop() {
+const TITLES = {
+  '/catalog': 'Каталог', '/community': 'Сообщество', '/taste': 'Настрой вкус',
+  '/recommendations': 'Рекомендации', '/profile': 'Кабинет', '/login': 'Вход',
+}
+
+// при переходе на другую страницу: прокрутка наверх и название вкладки
+function PageEffects() {
   const { pathname } = useLocation()
   useEffect(() => {
     window.scrollTo(0, 0)
+    if (pathname === '/') document.title = `${APP_NAME} — кино под ваш вкус`
+    else if (TITLES[pathname]) document.title = `${TITLES[pathname]} — ${APP_NAME}`
+    else if (!pathname.startsWith('/movie/')) document.title = APP_NAME
   }, [pathname])
   return null
 }
@@ -32,7 +42,7 @@ function NotFound() {
 export default function App() {
   return (
     <>
-      <ScrollToTop />
+      <PageEffects />
       <Navbar />
       <main className="container">
         <Routes>
@@ -41,6 +51,7 @@ export default function App() {
           <Route path="/recommendations" element={<Recommendations />} />
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/movie/:id" element={<MoviePage />} />
+          <Route path="/community" element={<Community />} />
           <Route path="/taste" element={<Onboarding />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />

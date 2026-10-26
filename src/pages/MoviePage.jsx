@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
+import { APP_NAME } from '../config'
 import {
   getMovieById, searchMovies, genreRu, displayTitle, originalTitle, movieOverview,
 } from '../services/moviesApi'
@@ -8,6 +10,8 @@ import { getUserMovieState, saveRating, deleteRating, setListItem } from '../ser
 import Poster, { genreColors } from '../components/Poster'
 import BackButton from '../components/BackButton'
 import MovieRail from '../components/MovieRail'
+import Trailer from '../components/Trailer'
+import Reviews from '../components/Reviews'
 import { Loader, ErrorBox } from '../components/Status'
 
 const EMPTY = { rating: null, favorite: false, watchlist: false }
@@ -55,6 +59,7 @@ export default function MoviePage() {
   const { id } = useParams()
   const movieId = Number(id)
   const { user } = useAuth()
+  const toast = useToast()
   const [movie, setMovie] = useState(null)
   const [state, setState] = useState(EMPTY)
   const [more, setMore] = useState(null)
@@ -71,6 +76,10 @@ export default function MoviePage() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }, [movieId])
+
+  useEffect(() => {
+    if (movie) document.title = `${displayTitle(movie)} — ${APP_NAME}`
+  }, [movie])
 
   // другие фильмы того же жанра (это не «похожие по алгоритму», так и подписано)
   useEffect(() => {
@@ -92,17 +101,17 @@ export default function MoviePage() {
     }
     getUserMovieState(user.id, movieId)
       .then(setState)
-      .catch((e) => setError(e.message))
+      .catch((e) => toast(e.message, 'error'))
   }, [user, movieId])
 
-  async function act(fn, next) {
+  async function act(fn, next, message) {
     setBusy(true)
-    setError(null)
     try {
       await fn()
       setState((s) => ({ ...s, ...next }))
+      if (message) toast(message)
     } catch (e) {
-      setError(e.message)
+      toast(e.message, 'error')
     } finally {
       setBusy(false)
     }
@@ -120,7 +129,7 @@ export default function MoviePage() {
 
   const [, c2] = genreColors(movie.genres[0])
   const heroBg = {
-    background: `radial-gradient(700px 320px at 20% 0%, ${c2}55, transparent 65%), var(--surface)`,
+    background: `radial-gradient(700px 320px at 20% 0%, ${c2}44, transparent 65%), var(--surface)`,
   }
   const overview = movieOverview(movie)
 
@@ -154,20 +163,25 @@ export default function MoviePage() {
 
             <p className="overview">{overview ?? 'Описание для этого фильма пока недоступно.'}</p>
             {movie.overview_ru && <p className="muted">Описание: Википедия (CC BY-SA)</p>}
+
+            <div className="actions">
+              <Trailer youtubeId={movie.trailer_youtube_id}
+                       query={`${originalTitle(movie)} ${movie.release_year ?? ''}`} />
+            </div>
           </div>
         </div>
       </section>
-
-      {error && <ErrorBox message={error} />}
 
       {user ? (
         <section className="panel">
           <h3>Ваша оценка{state.rating !== null ? `: ${state.rating} из 5` : ''}</h3>
           <StarsInput value={state.rating} disabled={busy}
-                      onChange={(v) => act(() => saveRating(user.id, movieId, v), { rating: v })} />
+                      onChange={(v) => act(() => saveRating(user.id, movieId, v),
+                                           { rating: v }, `Оценка ${v} сохранена`)} />
           {state.rating !== null && (
             <button className="link" disabled={busy}
-                    onClick={() => act(() => deleteRating(user.id, movieId), { rating: null })}>
+                    onClick={() => act(() => deleteRating(user.id, movieId),
+                                       { rating: null }, 'Оценка удалена')}>
               Удалить оценку
             </button>
           )}
@@ -177,14 +191,16 @@ export default function MoviePage() {
                     className={state.favorite ? 'btn-toggle on' : 'btn-toggle'}
                     onClick={() => act(
                       () => setListItem('favorites', user.id, movieId, !state.favorite),
-                      { favorite: !state.favorite })}>
+                      { favorite: !state.favorite },
+                      state.favorite ? 'Убрано из избранного' : 'Добавлено в избранное')}>
               {state.favorite ? '♥ В избранном' : '♡ В избранное'}
             </button>
             <button disabled={busy}
                     className={state.watchlist ? 'btn-toggle on' : 'btn-toggle'}
                     onClick={() => act(
                       () => setListItem('watchlist', user.id, movieId, !state.watchlist),
-                      { watchlist: !state.watchlist })}>
+                      { watchlist: !state.watchlist },
+                      state.watchlist ? 'Убрано из «Посмотреть позже»' : 'Добавлено в «Посмотреть позже»')}>
               {state.watchlist ? '✓ В списке «Посмотреть позже»' : '+ Посмотреть позже'}
             </button>
           </div>
@@ -194,6 +210,8 @@ export default function MoviePage() {
           <Link to="/login">Войдите</Link>, чтобы оценить фильм и добавить его в списки.
         </p>
       )}
+
+      <Reviews movieId={movieId} />
 
       {more && more.length > 0 && (
         <MovieRail title={`Ещё в жанре «${genreRu(movie.genres[0])}»`}
